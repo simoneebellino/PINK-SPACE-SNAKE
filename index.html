@@ -3,220 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAKE: PLANET HER EDITION</title>
+    <title>SNAKE: PLANET HER - 20 LEVELS</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: radial-gradient(circle, #5e055e 0%, #210124 100%);
+            background: radial-gradient(circle at center, #4b0082 0%, #000000 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
+            color: white;
         }
 
-        /* Schermata Iniziale */
-        #home-screen {
+        /* Sfondo decorativo */
+        #space-bg {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0.6;
+            background: linear-gradient(45deg, #ff00ff, #7a00ff);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.4);
+        }
+
+        /* Schermate Overlay */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 0, 20, 0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
-            transition: opacity 0.5s;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
         }
 
-        #home-screen h1 {
-            color: #ff00ff;
-            font-size: 5rem;
-            text-shadow: 0 0 20px #ff00ff, 0 0 40px #aa00ff;
-            margin-bottom: 30px;
-            letter-spacing: 10px;
-        }
-
-        #start-btn {
-            padding: 15px 50px;
+        h1 { font-size: 4rem; color: #ff00ff; text-shadow: 0 0 20px #ff00ff; margin-bottom: 20px; }
+        h2 { font-size: 2.5rem; color: #00ffff; margin-bottom: 10px; }
+        .stats { font-size: 1.2rem; margin: 20px 0; line-height: 1.6; color: #ffb7ff; }
+        
+        button {
+            padding: 15px 40px;
             font-size: 1.5rem;
             background: transparent;
             color: #fff;
             border: 2px solid #ff00ff;
             cursor: pointer;
-            border-radius: 50px;
+            border-radius: 10px;
             box-shadow: 0 0 15px #ff00ff;
             transition: 0.3s;
-        }
-
-        #start-btn:hover {
-            background: #ff00ff;
-            box-shadow: 0 0 30px #ff00ff;
-            transform: scale(1.1);
-        }
-
-        /* UI Gioco */
-        #game-container {
-            position: relative;
-            box-shadow: 0 0 50px rgba(255, 0, 255, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        canvas {
-            display: block;
-            background: rgba(0, 0, 0, 0.4);
-        }
-
-        #score-board {
-            position: absolute;
-            top: -50px;
-            left: 0;
-            color: #ffb7ff;
-            font-size: 20px;
             text-transform: uppercase;
-            letter-spacing: 2px;
         }
+
+        button:hover { background: #ff00ff; scale: 1.05; }
+
+        #game-container { position: relative; border: 3px solid rgba(255, 0, 255, 0.3); }
+        canvas { display: block; background: rgba(0, 0, 0, 0.5); }
+        #ui-top {
+            position: absolute; top: -40px; width: 100%;
+            display: flex; justify-content: space-between;
+            font-size: 18px; color: #ffb7ff; text-transform: uppercase;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="home-screen">
+    <div id="space-bg"></div>
+
+    <!-- Schermata Iniziale -->
+    <div id="home-screen" class="overlay">
         <h1>PLANET HER</h1>
-        <button id="start-btn">START MISSION</button>
+        <p>Completa 20 livelli nel vuoto cosmico</p><br>
+        <button onclick="startGame()">INIZIA MISSIONE</button>
     </div>
 
-    <div id="game-container">
-        <div id="score-board">Punti: <span id="score">0</span> | Prossimo: <span id="target">Carota</span></div>
+    <!-- Schermata Risultati -->
+    <div id="result-screen" class="overlay hidden">
+        <h2 id="result-title">LIVELLO COMPLETATO</h2>
+        <div class="stats" id="result-stats"></div>
+        <button id="result-btn"></button>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <div id="ui-top">
+            <span>Livello: <span id="lvl-val">1</span>/20</span>
+            <span>Cibi: <span id="food-count">0</span>/10</span>
+            <span>Punti: <span id="score-val">0</span></span>
+        </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const startBtn = document.getElementById("start-btn");
-        const homeScreen = document.getElementById("home-screen");
-        const scoreEl = document.getElementById("score");
-        const targetEl = document.getElementById("target");
-
-        // Impostazioni a schermo intero dinamiche
-        const gridSize = 30; 
-        canvas.width = Math.floor((window.innerWidth * 0.8) / gridSize) * gridSize;
-        canvas.height = Math.floor((window.innerHeight * 0.7) / gridSize) * gridSize;
-
+        const gridSize = 30;
+        
+        // Stato del gioco
+        let level = 1;
         let score = 0;
-        let snake = [{x: 10 * gridSize, y: 10 * gridSize}];
+        let foodsEatenInLevel = 0;
+        let totalFoodsList = [];
+        let snake = [];
         let food = {x: 0, y: 0};
-        let dx = gridSize;
-        let dy = 0;
-        let nextDx = gridSize;
-        let nextDy = 0;
+        let dx = gridSize, dy = 0;
+        let nextDx = gridSize, nextDy = 0;
         let gameInterval;
+        let isPaused = false;
 
         const foodList = [
-            { name: "Carota", icon: "🥕" },
-            { name: "Broccolo", icon: "🥦" },
-            { name: "Melanzana", icon: "🍆" },
-            { name: "Bistecca", icon: "🥩" },
-            { name: "Pollo", icon: "🍗" },
-            { name: "Salsiccia", icon: "🌭" },
-            { name: "Baguette", icon: "🥖" },
-            { name: "Pasta", icon: "🍝" },
-            { name: "Torta Choco-Vanilla", icon: "🍰" }
+            { name: "Carota", icon: "🥕" }, { name: "Broccolo", icon: "🥦" }, { name: "Melanzana", icon: "🍆" },
+            { name: "Bistecca", icon: "🥩" }, { name: "Pollo", icon: "🍗" }, { name: "Salsiccia", icon: "🌭" },
+            { name: "Baguette", icon: "🥖" }, { name: "Pasta", icon: "🍝" }, { name: "Torta", icon: "🍰" }
         ];
-        let currentFoodIndex = 0;
 
-        function init() {
-            homeScreen.style.opacity = "0";
-            setTimeout(() => {
-                homeScreen.style.display = "none";
-                createFood();
-                gameInterval = setInterval(gameLoop, 120); // Velocità più lenta e fluida
-            }, 500);
+        // Creazione Sfondo Spaziale
+        function createStars() {
+            const bg = document.getElementById('space-bg');
+            for(let i=0; i<150; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.background = 'white';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.borderRadius = '50%';
+                star.style.opacity = Math.random();
+                bg.appendChild(star);
+            }
+            // Aggiungi pianeti
+            for(let i=0; i<4; i++) {
+                const p = document.createElement('div');
+                p.className = 'planet';
+                const size = 50 + Math.random() * 100;
+                p.style.width = size + 'px'; p.style.height = size + 'px';
+                p.style.left = Math.random() * 80 + '%';
+                p.style.top = Math.random() * 80 + '%';
+                bg.appendChild(p);
+            }
+        }
+        createStars();
+
+        function startGame() {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            resetLevel();
         }
 
-        function createFood() {
+        function resetLevel() {
+            canvas.width = Math.floor((window.innerWidth * 0.8) / gridSize) * gridSize;
+            canvas.height = Math.floor((window.innerHeight * 0.7) / gridSize) * gridSize;
+            snake = [{x: 5 * gridSize, y: 5 * gridSize}];
+            dx = gridSize; dy = 0; nextDx = gridSize; nextDy = 0;
+            foodsEatenInLevel = 0;
+            updateUI();
+            spawnFood();
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, 140 - (level * 3)); // Velocità aumenta con i livelli
+        }
+
+        function spawnFood() {
             food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
             food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
-            targetEl.innerText = foodList[currentFoodIndex].name;
+            food.data = foodList[Math.floor(Math.random() * foodList.length)];
         }
 
         function gameLoop() {
-            dx = nextDx;
-            dy = nextDy;
-
+            dx = nextDx; dy = nextDy;
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
-            // Collisioni muri
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || collision(head)) {
-                alert("Missione Fallita! Punteggio: " + score);
-                location.reload();
+            // Collisioni
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.some(s => s.x === head.x && s.y === head.y)) {
+                endGame(false);
                 return;
             }
 
             snake.unshift(head);
 
-            // Mangia
             if (head.x === food.x && head.y === food.y) {
-                score += 10;
-                scoreEl.innerText = score;
-                currentFoodIndex = (currentFoodIndex + 1) % foodList.length;
-                createFood();
+                score += (10 * level);
+                foodsEatenInLevel++;
+                totalFoodsList.push(food.data.icon);
+                updateUI();
+                if (foodsEatenInLevel >= 10) {
+                    endGame(true);
+                } else {
+                    spawnFood();
+                }
             } else {
                 snake.pop();
             }
-
             draw();
         }
 
-        function collision(head) {
-            return snake.some((seg, index) => index !== 0 && seg.x === head.x && seg.y === head.y);
+        function updateUI() {
+            document.getElementById('lvl-val').innerText = level;
+            document.getElementById('food-count').innerText = foodsEatenInLevel;
+            document.getElementById('score-val').innerText = score;
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Disegna Cibo (Icone realistiche)
-            ctx.font = `${gridSize * 0.8}px serif`;
+            // Disegna Cibo
+            ctx.font = "24px serif";
             ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(foodList[currentFoodIndex].icon, food.x + gridSize/2, food.y + gridSize/2);
+            ctx.fillText(food.data.icon, food.x + gridSize/2, food.y + gridSize/2 + 5);
 
             // Disegna Serpente
             snake.forEach((part, i) => {
-                const isHead = i === 0;
-                
-                // Gradiente per il corpo
-                ctx.fillStyle = isHead ? "#d400ff" : "#8a00ab";
+                ctx.fillStyle = i === 0 ? "#ff00ff" : "#8a00ab";
                 ctx.beginPath();
-                ctx.roundRect(part.x + 2, part.y + 2, gridSize - 4, gridSize - 4, 8);
+                ctx.roundRect(part.x + 2, part.y + 2, gridSize - 4, gridSize - 4, 5);
                 ctx.fill();
 
-                if (isHead) {
+                if (i === 0) {
                     // Occhi Rossi Socchiusi
                     ctx.fillStyle = "red";
-                    // Occhio sinistro
-                    ctx.fillRect(part.x + 6, part.y + 8, 8, 3);
-                    // Occhio destro
-                    ctx.fillRect(part.x + 18, part.y + 8, 8, 3);
-                    
-                    // Pupilla sottile nera (per l'effetto "socchiuso")
-                    ctx.fillStyle = "black";
-                    ctx.fillRect(part.x + 6, part.y + 9, 8, 1);
-                    ctx.fillRect(part.x + 18, part.y + 9, 8, 1);
+                    ctx.fillRect(part.x + 5, part.y + 8, 8, 3);
+                    ctx.fillRect(part.x + 17, part.y + 8, 8, 3);
                 }
             });
         }
 
+        function endGame(isWin) {
+            clearInterval(gameInterval);
+            const screen = document.getElementById('result-screen');
+            const title = document.getElementById('result-title');
+            const stats = document.getElementById('result-stats');
+            const btn = document.getElementById('result-btn');
+
+            screen.classList.remove('hidden');
+
+            if (isWin) {
+                title.innerText = "LIVELLO " + level + " SUPERATO!";
+                title.style.color = "#00ffff";
+                stats.innerHTML = `Punteggio totale: ${score}<br>Cibi mangiati: ${totalFoodsList.slice(-10).join(' ')}`;
+                btn.innerText = level < 20 ? "CONTINUA" : "HAI VINTO TUTTO!";
+                btn.onclick = () => {
+                    if(level < 20) {
+                        level++;
+                        screen.classList.add('hidden');
+                        resetLevel();
+                    } else { location.reload(); }
+                };
+            } else {
+                title.innerText = "GAME OVER";
+                title.style.color = "#ff0000";
+                stats.innerHTML = `Ti sei fermato al livello ${level}<br>Punteggio finale: ${score}<br>Dieta spaziale: ${totalFoodsList.join(' ')}`;
+                btn.innerText = "RIPROVA LIVELLO";
+                btn.onclick = () => {
+                    screen.classList.add('hidden');
+                    resetLevel();
+                };
+            }
+        }
+
         window.addEventListener("keydown", e => {
             if (e.key === "ArrowUp" && dy === 0) { nextDx = 0; nextDy = -gridSize; }
-            if (e.key === "ArrowDown" && dy === 0) { nextDx = 0; nextDy = gridSize; }
-            if (e.key === "ArrowLeft" && dx === 0) { nextDx = -gridSize; nextDy = 0; }
-            if (e.key === "ArrowRight" && dx === 0) { nextDx = gridSize; nextDy = 0; }
+            else if (e.key === "ArrowDown" && dy === 0) { nextDx = 0; nextDy = gridSize; }
+            else if (e.key === "ArrowLeft" && dx === 0) { nextDx = -gridSize; nextDy = 0; }
+            else if (e.key === "ArrowRight" && dx === 0) { nextDx = gridSize; nextDy = 0; }
         });
-
-        startBtn.addEventListener("click", init);
-
     </script>
 </body>
 </html>
