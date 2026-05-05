@@ -3,264 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLANET HER: DIVINE FLOW</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300&display=swap" rel="stylesheet">
+    <title>PLANET HER: DIVINE ASCENSION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Playfair+Display:ital,wght@0,400;1,700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --pink: #ff00ff;
-            --purple: #7a00ff;
-            --gold: #f0c3ff;
-            --bg: #05000a;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
-        body { background: var(--bg); color: white; font-family: 'Montserrat', sans-serif; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
-
-        /* SFONDO DINAMICO */
-        #cosmic-bg { position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at center, #1a0033 0%, #05000a 100%); }
-        .nebula { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3; animation: pulse 10s infinite alternate; }
-
-        @keyframes pulse { from { transform: scale(1); opacity: 0.2; } to { transform: scale(1.5); opacity: 0.4; } }
-
-        /* UI DIVINA */
-        .glass-ui {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(240, 195, 255, 0.1);
-            border-radius: 40px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            z-index: 100;
-        }
-
-        h1 { font-family: 'Cinzel', serif; font-size: 4rem; letter-spacing: 15px; color: var(--gold); text-shadow: 0 0 30px var(--pink); margin-bottom: 30px; }
-
-        .btn-divine {
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 15px 50px;
-            font-family: 'Cinzel', serif;
-            letter-spacing: 5px;
-            border-radius: 50px;
-            transition: 0.5s;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05000a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             overflow: hidden;
-            position: relative;
+            font-family: 'Playfair Display', serif;
         }
 
-        .btn-divine:hover { background: var(--gold); color: var(--bg); box-shadow: 0 0 40px var(--gold); transform: translateY(-5px); }
+        /* UNIVERSO DETTAGLIATO */
+        #universe {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at center, #2d004d 0%, #05000a 100%);
+            overflow: hidden;
+        }
+
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.8; box-shadow: 0 0 5px white; }
+        .planet {
+            position: absolute; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(122,0,255,0.3));
+            box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), 0 0 50px rgba(255, 0, 255, 0.4);
+            filter: blur(1px);
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes float { from { transform: translate(0,0); } to { transform: translate(30px, 30px); } }
+
+        /* IPERSPAZIO FRONTALE */
+        #warp-canvas { position: absolute; inset: 0; z-index: 200; display: none; background: black; }
+
+        /* UI DIVINA E ORGANICA */
+        .overlay {
+            position: absolute; inset: 0;
+            background: rgba(5, 0, 10, 0.8);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100; backdrop-filter: blur(15px);
+        }
+
+        h1 { 
+            font-family: 'Cinzel', serif; font-size: clamp(3rem, 10vw, 6rem); 
+            color: #f0c3ff; text-shadow: 0 0 40px rgba(240, 195, 255, 0.6);
+            letter-spacing: 15px; margin-bottom: 20px;
+        }
+
+        .btn-space {
+            padding: 20px 60px; font-family: 'Cinzel', serif; font-size: 1.2rem;
+            background: transparent; color: #f0c3ff; border: 1px solid #f0c3ff;
+            cursor: pointer; letter-spacing: 5px; border-radius: 50px;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-space:hover { background: #f0c3ff; color: #050010; box-shadow: 0 0 40px #f0c3ff; transform: scale(1.05); }
 
         /* GIOCO */
-        #game-container { position: relative; display: none; }
-        canvas { display: block; filter: drop-shadow(0 0 10px var(--purple)); }
+        #game-wrapper { position: relative; padding: 20px; border: 1px solid rgba(240, 195, 255, 0.2); border-radius: 30px; background: rgba(255, 255, 255, 0.02); }
+        canvas#gameCanvas { display: block; border-radius: 20px; }
         
-        #hud {
-            position: absolute; top: -50px; width: 100%; display: flex; justify-content: space-between;
-            font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 2px;
+        #ui-layer { 
+            position: absolute; top: -60px; width: 100%; display: flex; 
+            justify-content: space-between; font-family: 'Cinzel', serif; color: #f0c3ff;
         }
 
-        /* RISULTATI */
-        .result-gif { width: 280px; border-radius: 20px; margin: 20px 0; border: 1px solid var(--pink); box-shadow: 0 0 30px var(--pink); }
+        .result-gif { width: 300px; border-radius: 20px; margin: 20px 0; border: 1px solid #ff00ff; box-shadow: 0 0 20px #ff00ff; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="cosmic-bg"></div>
+    <div id="universe"></div>
+    <canvas id="warp-canvas"></canvas>
 
-    <div id="start-menu" class="glass-ui">
+    <div id="home-screen" class="overlay">
         <h1>PLANET HER</h1>
-        <p style="margin-bottom: 40px; opacity: 0.7; letter-spacing: 5px;">ASCEND TO DIVINITY</p>
-        <button class="btn-divine" onclick="startGame()">START FLOW</button>
+        <p style="letter-spacing: 8px; color: #ccc; margin-bottom: 40px;">DIVINE SERPENT FLOW</p>
+        <button class="btn-space" onclick="startWarp()">ENTER DIMENSION</button>
     </div>
 
-    <div id="result-menu" class="glass-ui hidden">
-        <h2 id="res-title" style="font-family:'Cinzel'; font-size: 2.5rem;"></h2>
-        <img id="res-gif" class="result-gif" src="" alt="">
-        <p id="res-stats" style="margin-bottom: 30px;"></p>
-        <button class="btn-divine" onclick="restartGame()">REBORN</button>
+    <div id="result-screen" class="overlay hidden">
+        <h2 id="result-title" style="font-family:'Cinzel'; font-size: 3rem; margin-bottom: 10px;"></h2>
+        <img id="result-gif" class="result-gif" src="" alt="result">
+        <div id="result-stats" style="font-size: 1.3rem; color: #f0c3ff; margin-bottom: 25px; text-align: center;"></div>
+        <button id="result-btn" class="btn-space"></button>
     </div>
 
-    <div id="game-container">
-        <div id="hud">
+    <div id="game-wrapper" class="hidden">
+        <div id="ui-layer">
             <span>ENERGY: <span id="score">0</span></span>
-            <span>FLOW: <span id="level">1</span></span>
+            <span>LEVEL: <span id="lvl">1</span></span>
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const gridSize = 30; // Più piccolo per fluidità
-        
-        let snake = [];
-        let particles = [];
-        let food = { x: 0, y: 0, type: 'star' };
-        let portal = { x: -100, y: -100, active: false };
-        let dx = gridSize, dy = 0;
-        let nextDx = gridSize, nextDy = 0;
-        let score = 0;
-        let level = 1;
-        let gameLoop;
-        let frameCounter = 0;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const warpCanvas = document.getElementById("warp-canvas");
+        const warpCtx = warpCanvas.getContext("2d");
+        const gridSize = 45;
 
-        // Palette Planet Her
-        const colors = ['#ff00ff', '#e0aaff', '#9d4edd', '#7b2cbf', '#5a189a'];
+        let level = 1; let score = 0; let foodsEaten = 0;
+        let snake = []; let food = {x: 0, y: 0, data: null};
+        let portal = {x: -100, y: -100, active: false};
+        let dx = gridSize, dy = 0, nextDx = gridSize, nextDy = 0;
+        let gameInterval; let frame = 0;
 
-        function init() {
-            canvas.width = Math.floor(window.innerWidth * 0.8 / gridSize) * gridSize;
-            canvas.height = Math.floor(window.innerHeight * 0.7 / gridSize) * gridSize;
-            snake = [
-                {x: gridSize * 5, y: gridSize * 5},
-                {x: gridSize * 4, y: gridSize * 5},
-                {x: gridSize * 3, y: gridSize * 5}
-            ];
-            spawnFood();
-            createNebula();
+        const palette = ["#ff00ff", "#e0aaff", "#9d4edd", "#7b2cbf", "#5a189a", "#ff77ff", "#c77dff"];
+        const foodList = [
+            { icon: "🥕", name: "Carota" }, { icon: "🥩", name: "Bistecca" }, { icon: "🍰", name: "Torta" },
+            { icon: "🍕", name: "Pizza" }, { icon: "🍩", name: "Donut" }, { icon: "🍗", name: "Pollo" }
+        ];
+
+        // --- CREAZIONE UNIVERSO ---
+        function buildUniverse() {
+            const container = document.getElementById('universe');
+            for(let i=0; i<150; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                const size = Math.random() * 3;
+                s.style.width = size + 'px'; s.style.height = size + 'px';
+                s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 100 + '%';
+                container.appendChild(s);
+            }
+            for(let i=0; i<4; i++) {
+                const p = document.createElement('div');
+                p.className = 'planet';
+                const size = 100 + Math.random() * 200;
+                p.style.width = size + 'px'; p.style.height = size + 'px';
+                p.style.left = (Math.random() * 80) + '%'; p.style.top = (Math.random() * 70) + '%';
+                container.appendChild(p);
+            }
+        }
+        buildUniverse();
+
+        // --- IPERSPAZIO FRONTALE ---
+        function startWarp() {
+            document.getElementById('home-screen').style.opacity = '0';
+            warpCanvas.style.display = 'block';
+            warpCanvas.width = window.innerWidth;
+            warpCanvas.height = window.innerHeight;
+            let stars = [];
+            for(let i=0; i<500; i++) stars.push({
+                x: Math.random() * warpCanvas.width - warpCanvas.width/2,
+                y: Math.random() * warpCanvas.height - warpCanvas.height/2,
+                z: Math.random() * warpCanvas.width
+            });
+
+            function animateWarp() {
+                warpCtx.fillStyle = "rgba(0,0,0,0.2)";
+                warpCtx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
+                let done = true;
+                stars.forEach(s => {
+                    s.z -= 20;
+                    if(s.z <= 0) s.z = warpCanvas.width;
+                    let sx = (s.x / s.z) * 150 + warpCanvas.width/2;
+                    let sy = (s.y / s.z) * 150 + warpCanvas.height/2;
+                    let size = (1 - s.z / warpCanvas.width) * 5;
+                    warpCtx.fillStyle = "#f0c3ff";
+                    warpCtx.beginPath(); warpCtx.arc(sx, sy, size, 0, Math.PI*2); warpCtx.fill();
+                    if(frame < 100) done = false;
+                });
+                frame++;
+                if(frame < 120) requestAnimationFrame(animateWarp);
+                else {
+                    warpCanvas.style.display = 'none';
+                    document.getElementById('game-wrapper').classList.remove('hidden');
+                    initGame();
+                }
+            }
+            animateWarp();
         }
 
-        function createNebula() {
-            const bg = document.getElementById('cosmic-bg');
-            for(let i=0; i<5; i++) {
-                const n = document.createElement('div');
-                n.className = 'nebula';
-                n.style.width = Math.random() * 400 + 200 + 'px';
-                n.style.height = n.style.width;
-                n.style.left = Math.random() * 100 + '%';
-                n.style.top = Math.random() * 100 + '%';
-                n.style.background = colors[Math.floor(Math.random()*colors.length)];
-                bg.appendChild(n);
-            }
+        function initGame() {
+            canvas.width = Math.floor((window.innerWidth * 0.8) / gridSize) * gridSize;
+            canvas.height = Math.floor((window.innerHeight * 0.65) / gridSize) * gridSize;
+            snake = [
+                {x: 4 * gridSize, y: 5 * gridSize, color: palette[0]},
+                {x: 3 * gridSize, y: 5 * gridSize, color: palette[1]},
+                {x: 2 * gridSize, y: 5 * gridSize, color: palette[2]}
+            ];
+            dx = gridSize; dy = 0; nextDx = gridSize; nextDy = 0;
+            score = 0; foodsEaten = 0;
+            spawnFood();
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, 180);
         }
 
         function spawnFood() {
             food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
             food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
-            // Ogni tanto spawna un portale
-            if(Math.random() > 0.7) {
+            food.data = foodList[Math.floor(Math.random() * foodList.length)];
+            // Spawna portale ogni tanto
+            if(Math.random() > 0.8) {
                 portal.active = true;
                 portal.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
                 portal.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
             }
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            frameCounter++;
-
-            // Disegna Portale (Pianeta Orbitante)
-            if(portal.active) {
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = "cyan";
-                ctx.fillStyle = "rgba(0, 255, 255, 0.3)";
-                ctx.beginPath();
-                ctx.arc(portal.x + gridSize/2, portal.y + gridSize/2, (gridSize/2) * Math.sin(frameCounter*0.1) + 10, 0, Math.PI*2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-
-            // Disegna Polvere di Stelle (Food)
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = varColor('--pink');
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(food.x + gridSize/2, food.y + gridSize/2, 5 + Math.sin(frameCounter*0.2)*2, 0, Math.PI*2);
-            ctx.fill();
-
-            // Disegna Snake Vivente
-            snake.forEach((part, i) => {
-                const isHead = i === 0;
-                const size = isHead ? gridSize * 0.5 : (gridSize * 0.4) - (i * 0.05);
-                const color = colors[i % colors.length];
-                
-                ctx.shadowBlur = isHead ? 20 : 10;
-                ctx.shadowColor = color;
-                ctx.fillStyle = color;
-
-                ctx.beginPath();
-                // Effetto fluido: posizione leggermente oscillante
-                const wobble = Math.sin(frameCounter * 0.1 + i) * 2;
-                ctx.arc(part.x + gridSize/2 + wobble, part.y + gridSize/2 + wobble, Math.max(size, 2), 0, Math.PI*2);
-                ctx.fill();
-                
-                // Aura divina sulla testa
-                if(isHead) {
-                    ctx.strokeStyle = "white";
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-            });
-        }
-
-        function update() {
+        function gameLoop() {
+            frame++;
             dx = nextDx; dy = nextDy;
-            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy, color: palette[frame % palette.length] };
 
-            // Collisione Portale
+            // Collisione Portale (Teletrasporto)
             if(portal.active && head.x === portal.x && head.y === portal.y) {
                 head.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
                 head.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
                 portal.active = false;
             }
 
-            // Game Over
             if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.some(s => s.x === head.x && s.y === head.y)) {
-                endGame(false);
-                return;
+                showResult(false); return;
             }
-
-            snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
-                score += 10;
-                document.getElementById('score').innerText = score;
-                if(score % 100 === 0) { level++; document.getElementById('level').innerText = level; }
-                if(score >= 150) { endGame(true); return; }
-                spawnFood();
+                score += 15; foodsEaten++;
+                snake.unshift(head);
+                if (foodsEaten >= 10) showResult(true); else spawnFood();
             } else {
-                snake.pop();
+                for(let i = snake.length - 1; i > 0; i--) {
+                    snake[i].x = snake[i-1].x; snake[i].y = snake[i-1].y;
+                    snake[i].color = snake[i-1].color;
+                }
+                snake[0].x = head.x; snake[0].y = head.y; snake[0].color = head.color;
             }
+            document.getElementById('score').innerText = score;
+            document.getElementById('lvl').innerText = level;
             draw();
         }
 
-        function varColor(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        function startGame() {
-            document.getElementById('start-menu').classList.add('hidden');
-            document.getElementById('game-container').style.display = 'block';
-            init();
-            gameLoop = setInterval(update, 120);
+            // Disegna Portale
+            if(portal.active) {
+                ctx.shadowBlur = 25; ctx.shadowColor = "#00ffff";
+                ctx.fillStyle = "rgba(0, 255, 255, 0.4)";
+                ctx.beginPath();
+                ctx.arc(portal.x + gridSize/2, portal.y + gridSize/2, gridSize/2 * Math.sin(frame*0.2) + 15, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            // Disegna Cibo Realistico
+            ctx.shadowBlur = 10; ctx.shadowColor = "white";
+            ctx.font = "35px serif"; ctx.textAlign = "center";
+            ctx.fillText(food.data.icon, food.x + gridSize/2, food.y + gridSize/2 + 12);
+
+            // Disegna Snake Divino (Sfere e Scia)
+            snake.forEach((part, i) => {
+                ctx.shadowBlur = 20; ctx.shadowColor = part.color;
+                ctx.fillStyle = part.color;
+                const size = i === 0 ? 20 : 18 - (i * 0.2);
+                const wobble = Math.sin(frame * 0.2 + i) * 3;
+                
+                ctx.beginPath();
+                ctx.arc(part.x + gridSize/2 + wobble, part.y + gridSize/2 + wobble, Math.max(size, 5), 0, Math.PI*2);
+                ctx.fill();
+                
+                // Glitter effect
+                if(Math.random() > 0.8) {
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(part.x + Math.random()*gridSize, part.y + Math.random()*gridSize, 2, 2);
+                }
+            });
         }
 
-        function endGame(win) {
-            clearInterval(gameLoop);
-            document.getElementById('game-container').style.display = 'none';
-            const menu = document.getElementById('result-menu');
-            menu.classList.remove('hidden');
-            
-            document.getElementById('res-title').innerText = win ? "DIVINITY REACHED" : "ENERGY DEPLETED";
-            document.getElementById('res-gif').src = win ? 
-                "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDg2ZXYweWN3a2dmdmR5MTUwbXg4MmJsc2hiNzFvbzM0OWtrdmZibiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tODygE8KCqBzy/giphy.gif" : 
-                "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZ6eHh6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Jm09Z1/3o7TKVUn7iM8FMEU24/giphy.gif";
-            document.getElementById('res-stats').innerText = `Final Energy: ${score} | Flow Level: ${level}`;
-        }
+        function showResult(isWin) {
+            clearInterval(gameInterval);
+            const screen = document.getElementById('result-screen');
+            const gif = document.getElementById('result-gif');
+            const title = document.getElementById('result-title');
+            const btn = document.getElementById('result-btn');
 
-        function restartGame() {
-            score = 0; level = 1;
-            document.getElementById('score').innerText = "0";
-            document.getElementById('level').innerText = "1";
-            document.getElementById('result-menu').classList.add('hidden');
-            startGame();
+            screen.classList.remove('hidden');
+            if(isWin) {
+                title.innerText = "ASCENDED"; title.style.color = "#f0c3ff";
+                gif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDg2ZXYweWN3a2dmdmR5MTUwbXg4MmJsc2hiNzFvbzM0OWtrdmZibiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tODygE8KCqBzy/giphy.gif";
+                btn.innerText = "NEXT FLOW";
+                btn.onclick = () => { level++; screen.classList.add('hidden'); initGame(); };
+            } else {
+                title.innerText = "DEFEAT"; title.style.color = "#ff4444";
+                gif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmZ6eHh6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Jm09Z1/3o7TKVUn7iM8FMEU24/giphy.gif";
+                btn.innerText = "REBORN";
+                btn.onclick = () => { screen.classList.add('hidden'); initGame(); };
+            }
+            document.getElementById('result-stats').innerHTML = `ENERGY: ${score}<br>DIMENSION: ${level}`;
         }
 
         // CONTROLLI
-        window.addEventListener('keydown', e => {
-            if (e.key === 'ArrowUp' && dy === 0) { nextDx = 0; nextDy = -gridSize; }
-            if (e.key === 'ArrowDown' && dy === 0) { nextDx = 0; nextDy = gridSize; }
-            if (e.key === 'ArrowLeft' && dx === 0) { nextDx = -gridSize; nextDy = 0; }
-            if (e.key === 'ArrowRight' && dx === 0) { nextDx = gridSize; nextDy = 0; }
+        window.addEventListener("keydown", e => {
+            if (e.key === "ArrowUp" && dy === 0) { nextDx = 0; nextDy = -gridSize; }
+            if (e.key === "ArrowDown" && dy === 0) { nextDx = 0; nextDy = gridSize; }
+            if (e.key === "ArrowLeft" && dx === 0) { nextDx = -gridSize; nextDy = 0; }
+            if (e.key === "ArrowRight" && dx === 0) { nextDx = gridSize; nextDy = 0; }
         });
     </script>
 </body>
